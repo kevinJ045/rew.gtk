@@ -1,7 +1,7 @@
 
 class Archive
-  constructor: -> 
-    @items = {}
+  constructor: (items = {}) -> 
+    @items = {...items}
   register: (name, classFunction) ->
     @items[name] = classFunction
     this

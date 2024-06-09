@@ -20,11 +20,17 @@ class App
     gi.startLoop()
     @appLoop = @GLib.MainLoop.new(null, false)
 
-  
+    @archive = {}
+
+  register: (name, handler) ->
+    if @archive isnt null
+      @archive.register name, handler
+ 
   setup: (cb) ->
     @gtk_app.on 'activate', () => 
-      Context = getWidgets @Gtk, @gtk_app, @appLoop, @config
-      Root = getRoot Context
+      { Context, widgets, archive } = getWidgets @Gtk, @gtk_app, @appLoop, @config, @archive
+      @archive = archive
+      Root = getRoot Context, archive, widgets, @Gtk
       cb Root
       @appLoop.run()
 

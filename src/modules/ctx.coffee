@@ -7,6 +7,7 @@ getContext = (archive) -> class Context
     @children = []
     @parent = parent || null
     @options = @_constructOptions options
+    @_onbackHandlers = []
     @_init()
 
   _constructOptions: (options) ->
@@ -18,9 +19,16 @@ getContext = (archive) -> class Context
       v = item.value(@, ...args)
       @children.push v
       v 
-
+  
+  
+  onBack: (cb) ->
+    @_onbackHandlers.push(cb)
   back: ->
+    @_onbackHandlers.forEach (cb) => cb(@)
     @parent || this
+  
+  __set__: (prop, val) ->
+    @[prop] = val
   
 
 exports { getContext }

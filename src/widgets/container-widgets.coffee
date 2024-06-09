@@ -1,7 +1,7 @@
 getContainerWidgets = (Context, createClass, widgets, archive, app, apploop, config, Gtk) ->
 
   widgets.box = createClass Gtk.Box, 
-    options: (options) -> { orientation: if options.orientation is 'horizontal' then Gtk.Orientation.HORIZONTAL else Gtk.Orientation.VERTICAL }
+    options: (options) -> { ...options, orientation: if options.orientation is 'horizontal' or options.orientation is 'h' then Gtk.Orientation.HORIZONTAL else Gtk.Orientation.VERTICAL }
     name: 'box'
     take: (W) ->
       W::add = (child) -> @widget.append child
@@ -9,6 +9,13 @@ getContainerWidgets = (Context, createClass, widgets, archive, app, apploop, con
   widgets.grid = createClass Gtk.Grid, 
     name: 'grid'
     take: (W) ->
+      W::add  = () -> 
+        new Context
+          .__set__ 'children', []
+          .__set__ 'add', (child) ->
+            @children.push(child)
+          .onBack (self) ->
+            self.children.forEach (f) -> print f
       W::attach = (child, left, top, width, height) -> 
         @widget.attach(child, left, top, width, height)
 

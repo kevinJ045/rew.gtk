@@ -1,7 +1,7 @@
 {
   "name": "rew.rayous",
   "version": "0.0.1",
-  "description": "",
+  "description": "GTK Bindings for rew",
   "main": "main.coffee",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -10,6 +10,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "node-gtk": "^0.14.0",
+    "node-gtk": "^0.14.0"
   }
 }

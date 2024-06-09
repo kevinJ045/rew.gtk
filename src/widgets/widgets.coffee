@@ -9,9 +9,9 @@
 { getSpecialWidgets } = imp './special-widgets.coffee'
 { getGestureWidgets } = imp './gesture-widgets.coffee'
 
-getWidgets = (Gtk, app, apploop, config = {}) ->
+getWidgets = (Gtk, app, apploop, config = {}, ...archive) ->
 
-  archive = new Archive
+  archive = new Archive archive
   Context = getContext(archive)
   widgets = {}
 
@@ -62,6 +62,10 @@ getWidgets = (Gtk, app, apploop, config = {}) ->
     show: ->
       @widget.show()
 
+  widgets.base::extends = createClass
+
+    
+
   class GtkWindow extends GtkWidget
     constructor: (options, parent) ->
       super options, parent, 'window'
@@ -107,6 +111,6 @@ getWidgets = (Gtk, app, apploop, config = {}) ->
     }
   ```
 
-  Context
+  { Context, widgets, archive }
 
 exports { getWidgets }
