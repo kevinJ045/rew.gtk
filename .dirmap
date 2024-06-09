@@ -1,0 +1,10 @@
+src/
+  widgets/
+    container-widgets.coffee
+    control-widgets.coffee
+    display-widgets.coffee
+    selection-widgets.coffee
+    layout-widgets.coffee
+    miscellaneous-widgets.coffee
+    special-widgets.coffee
+    gesture-widgets.coffee

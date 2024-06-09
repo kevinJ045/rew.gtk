@@ -1,0 +1,16 @@
+---
+syntax: core
+parse:
+  - token: !identifier 'pub'
+    hook:
+      index: +1
+      value: "${next}, "
+  - token: !comment ''
+    valueTrimmed: '@jsx'
+    option: 
+        jsx: true
+  - token: !comment ''
+    valueTrimmed: '@cls'
+    option: 
+        cls: true
+---

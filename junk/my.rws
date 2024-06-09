@@ -1,0 +1,7 @@
+
+On-Token IDENTIFIER pub {
+	Skip
+	Hook Index+1, NextToken/Value + ","
+}
+
+On-Token IDENTIFIER 
