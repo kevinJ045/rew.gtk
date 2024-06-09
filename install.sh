@@ -6,7 +6,6 @@ if [ -f /etc/os-release ]; then
     DISTRO=$ID
 else
     echo "Cannot determine Linux distribution."
-    exit 1
 fi
 
 # Package(s) to be installed
