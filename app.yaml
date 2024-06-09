@@ -8,3 +8,5 @@ assets:
   folder: ./assets
 install:
   requirements: []
+  commands:
+    - sh $installPath/install.sh
