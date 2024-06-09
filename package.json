@@ -1,6 +1,6 @@
 {
   "name": "rew.rayous",
-  "version": "0.0.02",
+  "version": "0.0.03",
   "description": "GTK Bindings for rew\nMore in the readme",
   "main": "main.coffee",
   "scripts": {
