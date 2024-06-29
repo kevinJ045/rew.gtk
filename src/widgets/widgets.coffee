@@ -9,20 +9,20 @@
 { getSpecialWidgets } = imp './special-widgets.coffee'
 { getGestureWidgets } = imp './gesture-widgets.coffee'
 
-getWidgets = (Gtk, app, apploop, config = {}, ...archive) ->
+getWidgets = (Gtk, app, apploop, config = {}, ...archiveStuff) ->
 
-  archive = new Archive archive
+  archive = new Archive archiveStuff
   Context = getContext(archive)
   widgets = {}
 
-  createClass = (GtkClass, { options = ((o) -> o), create, inherits, onInit, name = '', take = (W) -> W } = {}) ->
+  createClass = (GtkClass, { options = ((o) -> o), create, inherits, onInit, name = '', take = (W) -> W } = {}) =>
     if typeof inherits is "function"
       originalOptions = options
       options = (o) ->
         originalOptions inherits::_optionsCreate(o)
       create = () -> inherits::create
 
-    class WidgetClass extends GtkWidget
+    class WidgetClass extends widgets.base
       constructor: (options, parent) ->
         super options, parent, WidgetClass::name
       
@@ -66,7 +66,7 @@ getWidgets = (Gtk, app, apploop, config = {}, ...archive) ->
 
     
 
-  class GtkWindow extends GtkWidget
+  class GtkWindow extends widgets.base
     constructor: (options, parent) ->
       super options, parent, 'window'
     
@@ -76,8 +76,8 @@ getWidgets = (Gtk, app, apploop, config = {}, ...archive) ->
       @widget.setDefaultSize(@options.width || 200, @options.height || 200)
 
       if options.closeOnQuit isnt false
-        @widget.on('close-request', 
-            -> 
+        @widget.on('close-request',
+            ->
               apploop.quit()
               process.exit(0)
           )
@@ -85,16 +85,16 @@ getWidgets = (Gtk, app, apploop, config = {}, ...archive) ->
     add: (child) ->
       @widget.setChild child
 
-    show: () -> 
+    show: () ->
       @widget.show()
       @widget.present()
       @
 
   archive.register 'root.window', (root, options) -> new GtkWindow options, root
   
-  getContainerWidgets(Context, createClass, widgets, archive, app, apploop, config, Gtk)
+  getContainerWidgets(createClass, widgets, Gtk, app, apploop, config, Gtk)
   getControlWidgets(Context, createClass, widgets, archive, app, apploop, config, Gtk)
-  getDisplayWidgets(Context, createClass, widgets, archive, app, apploop, config, Gtk)
+  getDisplayWidgets(createClass, widgets, Gtk, app, apploop, config, Gtk)
   getSelectionWidgets(Context, createClass, widgets, archive, app, apploop, config, Gtk)
   getLayoutWidgets(Context, createClass, widgets, archive, app, apploop, config, Gtk)
   getMiscellaneousWidgets(Context, createClass, widgets, archive, app, apploop, config, Gtk)
@@ -104,7 +104,7 @@ getWidgets = (Gtk, app, apploop, config = {}, ...archive) ->
   ```
     for(let key in widgets){
       const value = widgets[key];
-      archive.register(`any.${key}`, (root, ...args) => {
+      archive.register("any."+key, (root, ...args) => {
         options = value.prototype.create(...args)
         return new value(options, root);
       });

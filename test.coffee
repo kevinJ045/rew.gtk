@@ -1,16 +1,24 @@
-{ App } = imp './main.coffee'
-
-new App( gtk: '4.0' )
-  .setup (ctx) ->
-    ctx
-      .window title: 'My GTK Window', width: 300, height: 200
-        .box orientation: 'vertical', spacing: 10
-          .button 'Imabutt'
-          .back 'button'
-          .button 'bttt'
-          .back 'button'
-          .text 'hi'
-          .back 'text'
-        .back 'box'
-      .show()
-  .run()
+using namespace imp('./main',
+  gtk: '4.0',
+  package: app.config.manifest.package
+).setup ->
+  using JSX as Widget::create
+  CustomEl = (props, name) ->
+    <label>{name}</label>
+  using refine(Window) ->
+    xs = @state "This is a state"
+    child = @state (<label>{'This is a whole element to be changed'}</label>)
+    <box orientation="vertical">
+      <label>{xs}</label>
+      <box>
+        {child}
+      </box>
+      <CustomEl>{'This is a custom element'}</CustomEl>
+      <button onClicked={() -> xs.set 'Changed'}>
+        {'Change the first label'}
+      </button>
+      <button
+       onClicked={() -> child.set <label>{'Changed the element'}</label>}>
+        {'Change the element'}
+      </button>
+    </box>

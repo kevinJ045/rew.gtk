@@ -1,51 +1,51 @@
-getMiscellaneousWidgets = (Context, createClass, widgets, archive, app, apploop, config, Gtk) ->
-  widgets.popoverMenuBar = createClass Gtk.PopoverMenuBar, 
+getMiscellaneousWidgets = (createClass, widgets, Gtk) ->
+  widgets.popoverMenuBar = createClass Gtk.PopoverMenuBar,
     name: 'popoverMenuBar'
 
-  widgets.aspectFrame = createClass Gtk.AspectFrame, 
+  widgets.aspectFrame = createClass Gtk.AspectFrame,
     name: 'aspectFrame'
 
-  widgets.frame = createClass Gtk.Frame, 
+  widgets.frame = createClass Gtk.Frame,
     options: (options) -> { label: options.label || '' }
     name: 'frame'
     take: (W) ->
       W::add = (child) -> @widget.setChild child
 
-  widgets.separator = createClass Gtk.Separator, 
+  widgets.separator = createClass Gtk.Separator,
     options: (options) -> { orientation: options.orientation || Gtk.Orientation.HORIZONTAL }
     name: 'separator'
 
-  widgets.levelBar = createClass Gtk.LevelBar, 
+  widgets.levelBar = createClass Gtk.LevelBar,
     name: 'levelBar'
 
-  widgets.drawingArea = createClass Gtk.DrawingArea, 
+  widgets.drawingArea = createClass Gtk.DrawingArea,
     name: 'drawingArea'
 
-  widgets.revealer = createClass Gtk.Revealer, 
+  widgets.revealer = createClass Gtk.Revealer,
     name: 'revealer'
 
-  widgets.shortcutsWindow = createClass Gtk.ShortcutsWindow, 
+  widgets.shortcutsWindow = createClass Gtk.ShortcutsWindow,
     name: 'shortcutsWindow'
 
-  widgets.fileChooserButton = createClass Gtk.FileChooserButton, 
+  widgets.fileChooserButton = createClass Gtk.FileChooserButton,
     name: 'fileChooserButton'
 
-  widgets.expander = createClass Gtk.Expander, 
+  widgets.expander = createClass Gtk.Expander,
     options: (options) -> { label: options.label || '' }
     name: 'expander'
 
-  widgets.progressIndicator = createClass Gtk.ProgressIndicator, 
+  widgets.progressIndicator = createClass Gtk.ProgressIndicator,
     name: 'progressIndicator'
 
-  widgets.listView = createClass Gtk.ListView, 
+  widgets.listView = createClass Gtk.ListView,
     name: 'listView'
 
-  widgets.columnView = createClass Gtk.ColumnView, 
+  widgets.columnView = createClass Gtk.ColumnView,
     name: 'columnView'
 
-  widgets.treeView = createClass Gtk.TreeView, 
+  widgets.treeView = createClass Gtk.TreeView,
     name: 'treeView'
-    onInit: (widget, options) -> 
+    onInit: (widget, options) ->
       if options.model
         widget.setModel(options.model)
       if options.columns

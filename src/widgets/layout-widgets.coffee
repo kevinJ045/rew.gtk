@@ -1,29 +1,29 @@
-getLayoutWidgets = (Context, createClass, widgets, archive, app, apploop, config, Gtk) ->
-  widgets.headerBar = createClass Gtk.HeaderBar, 
+getLayoutWidgets = (createClass, widgets, Gtk) ->
+  widgets.headerBar = createClass Gtk.HeaderBar,
     name: 'headerBar'
 
-  widgets.actionBar = createClass Gtk.ActionBar, 
+  widgets.actionBar = createClass Gtk.ActionBar,
     name: 'actionBar'
 
-  widgets.toolbar = createClass Gtk.Toolbar, 
+  widgets.toolbar = createClass Gtk.Toolbar,
     name: 'toolbar'
 
-  widgets.toolButton = createClass Gtk.ToolButton, 
+  widgets.toolButton = createClass Gtk.ToolButton,
     name: 'toolButton'
 
-  widgets.menuBar = createClass Gtk.MenuBar, 
+  widgets.menuBar = createClass Gtk.MenuBar,
     name: 'menuBar'
 
-  widgets.menu = createClass Gtk.Menu, 
+  widgets.menu = createClass Gtk.Menu,
     name: 'menu'
 
-  widgets.menuItem = createClass Gtk.MenuItem, 
+  widgets.menuItem = createClass Gtk.MenuItem,
     options: (options) -> { label: options.label || 'Menu Item' }
     name: 'menuItem'
-    onInit: (widget, options) -> 
+    onInit: (widget, options) ->
       widget.on('activate', => @emit('activate'))
 
-  widgets.popoverMenu = createClass Gtk.PopoverMenu, 
+  widgets.popoverMenu = createClass Gtk.PopoverMenu,
     name: 'popoverMenu'
 
 

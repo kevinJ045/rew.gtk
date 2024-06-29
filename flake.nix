@@ -12,11 +12,13 @@
         cairo
         libglvnd
         glib
+        glib-networking
         gtk3
         gtk4
         libxkbcommon
         fontconfig
         freetype
+        webkitgtk
         xorg.libX11
         dbus
         zlib

@@ -1,11 +1,12 @@
 
 class Archive
-  constructor: (items = {}) -> 
+  constructor: (items = {}) ->
     @items = {...items}
+    @
   register: (name, classFunction) ->
     @items[name] = classFunction
     this
-  unregister: (name) -> 
+  unregister: (name) ->
     delete @items[name]
     this
   find: (name) ->

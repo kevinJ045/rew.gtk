@@ -1,8 +1,8 @@
-getContext = (archive) -> class Context
-  parent = null
-  name = ''
-  children = []
-  constructor: (options, name, parent) -> 
+getContext = (archive) -> class
+  parent: null
+  name: ''
+  children: []
+  constructor: (options, name, parent) ->
     @name = name || 'root'
     @children = []
     @parent = parent || null
@@ -11,11 +11,11 @@ getContext = (archive) -> class Context
     @_init()
 
   _constructOptions: (options) ->
-    { options... }
+    return { ...options }
 
-  _init: -> 
+  _init: ->
     archive.filter @name
-    .forEach (item) => @[item.name] = (...args) -> 
+    .forEach (item) => @[item.name] = (...args) ->
       v = item.value(@, ...args)
       @children.push v
       v 
