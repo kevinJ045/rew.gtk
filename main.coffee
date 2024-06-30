@@ -13,20 +13,34 @@ appOptions = struct
   name: ''
 
   gtk: '4.0'
+  glib: '2.0'
 
 class UiContext
   constructor: (config = {}) ->
     @config = appOptions config
-    @GLib = gi.require 'GLib', '2.0'
+    @GLib = gi.require 'GLib', config.glib
     @Gtk = gi.require 'Gtk', config.gtk
     gi.startLoop()
 
-    @appLoop = @GLib.MainLoop.new(null, false)
+    print @Gtk
+
+    @Gtk.init()
+
+    @Gtk.selected = config.gtk
+    @GLib.selected = config.glib
+
+    if config.gtk is '4.0'
+      @appLoop = @GLib.MainLoop.new(null, false)
     @gtk_app = new @Gtk.Application(config.package, 0)
     @
 
+  require: (name, version) -> gi.require(name, version)
+
   startMain: () ->
-    @status = @gtk_app.run([])
+    if @config.gtk is '3.0'
+      @Gtk.main()
+    else
+      @status = @gtk_app.run([])
 
 useChild = (elt, child) ->
   if child instanceof WidgetState
@@ -63,9 +77,22 @@ createElement = (ctx, elements, element, props = {}, ...children) ->
   preparedProps = if props then aspectProps(props) else {}
 
   if element of elements
-    elt = new (elements[element])(preparedProps)
+    ElementClass = elements[element]
+    callElt = {}
+
+    if ElementClass::bindOptions
+      for opt in ElementClass::bindOptions
+        if opt of (props or {})
+          delete preparedProps[opt]
+          callElt[opt] = props[opt]
+
+    elt = new ElementClass preparedProps
+
     for child in children
       useChild elt, child
+
+    for key, val of callElt
+      elt[key](val)
 
     for key, value of preparedProps
       if props[key] instanceof WidgetState
@@ -90,6 +117,7 @@ defaultExcludes = [
   'name'
   'useBy'
   'useRef'
+  'bind'
 ]
 excludeStuff = (options, exclude) ->
   o = {...options}
@@ -110,9 +138,9 @@ class WidgetState
   get: () ->
     return this._value;
 
-  set: (value) ->
+  set: (value, notify = true) ->
     this._value = value
-    @target.emit('set', value)
+    if notify then @target.emit('set', value)
 
 class WidgetRef extends WidgetState
   set: (value) ->
@@ -159,8 +187,8 @@ createWidgetClass = (ctx) ->
 
     widget_children: []
     add: (child) ->
-      if typeof child == "string" || typeof child == "number"
-        @_text child
+      if typeof child == "string" || typeof child == "number" || typeof child == "boolean"
+        @_text child.toString()
       else if child instanceof ctx.Gtk.Widget
         @_add child
       else if child instanceof Widget
@@ -180,12 +208,24 @@ createWidgetClass = (ctx) ->
 
     create: (element, props, ...children) -> createElement(ctx, elements, element, props, ...children)
 
-  createClass = (GtkClass, { options = ((o) -> o), create, exclude = [], inherits, onInit, name = '', take = (W) -> W } = {}) ->
+  createClass = (GtkClass, { options = ((o) -> o), create, exclude = [], bindOptions = [], inherits, onInit, name = '', take = (W) -> W } = {}) ->
+    print name, GtkClass
     if typeof inherits is "function"
       originalOptions = options
       options = (o) ->
         originalOptions inherits::_optionsCreate(o)
       create = () -> inherits::create
+      exclude = [...exclude, ...inherits::_excludeOptions]
+      bindOptions = [...bindOptions, ...inherits::bindOptions]
+      originalTake = take
+      take = (W) ->
+        inherits::_take W
+        originalTake W
+      originalOnInit = onInit
+      onInit = (...args) ->
+        inherits::__initiationCall.call @, args...
+        if typeof originalOnInit == 'function'
+          originalOnInit.call @, args...
 
     propSet = []
     onProp = (prop, cb) ->
@@ -209,14 +249,17 @@ createWidgetClass = (ctx) ->
         @options = {...opts, ...(@options or {})}
         @widget = new GtkClass options(excludeStuff(@options, exclude), @options)
         @widget.wrappedByClass = @;
-        @_excludeOptions = exclude;
         onInit.call(@, @widget, @options) if typeof onInit is "function"
 
     WidgetClass::name = name if name isnt null
     WidgetClass::_optionsCreate = options
     WidgetClass::onProp = onProp
+    WidgetClass::bindOptions = bindOptions
+    WidgetClass::_excludeOptions = exclude
+    WidgetClass::__initiationCall = onInit or (->)
 
     take WidgetClass
+    WidgetClass::_take = take
 
     if not create and not WidgetClass::create
       WidgetClass::create = (options) -> options
@@ -246,9 +289,9 @@ createWindow = (ctx, options) ->
         ctx.appLoop.quit()
         process.exit(0)
     else
+      window.on('delete-event', () => false)
       window.on 'destroy', ->
         ctx.Gtk.mainQuit()
-        ctx.appLoop.quit()
         process.exit(0)
 
   _setChild = (child) => if ctx.config.gtk is '4.0' then window.setChild child else window.add child
@@ -285,8 +328,9 @@ createUiApp = (options) ->
       options = {}
 
     windowContext = createWindow ctx, options
-    windowContext.show();
-    windowContext.window.present() if ctx.config.gtk is '4.0'
+    if ctx.config.gtk is '4.0'
+      windowContext.show();
+      windowContext.window.present() 
 
     windowContext.$$states = {};
     windowContext.$$renders = 0;
@@ -315,20 +359,23 @@ createUiApp = (options) ->
       windowContext.setChild widget
     
     windowContext.render()
+    windowContext.show() if ctx.config.gtk is '3.0'
   ctx.Window.prototype = {}
   ctx.Window::create = (options) -> createWindow ctx, options
   
   ctx.setup = (cb) ->
     ctx.isNameSpace = false
-    ctx.gtk_app.on 'activate', ->
+    start = ->
       if ctx.isNameSpace
         using namespace ctx, cb
       else
         cb ctx
-      ctx.appLoop.run()
+      if ctx.config.gtk is '4.0' then ctx.appLoop.run()
+    ctx.gtk_app.on 'activate', start
     return namespace.group [Usage::create('null', () -> ctx.startMain()), ->], {
       'onUse': ->
         ctx.isNameSpace = true
+        if ctx.config.gtk is '3.0' then start()
         ctx.startMain()
     }
   

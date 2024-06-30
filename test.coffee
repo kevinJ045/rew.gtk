@@ -8,6 +8,9 @@ using namespace imp('./main',
   using refine(Window) ->
     active = @state 'First'
     popoverRef = @ref()
+    isOnToggle = @state true
+    isOnCheck = @state false
+    isOnSwitch = @state false
     <scrolledWindow>
       <box>
         <grid maxCols={10}>
@@ -43,11 +46,25 @@ using namespace imp('./main',
                 </box>
               </popover>
               <flowBox>
-                {
-                  <button>{i}</button> for i in [0..10]
-                }
+                <box>
+                  <label>{isOnToggle}</label>
+                  <toggleButton bind={isOnToggle}>Toggle</toggleButton>
+                </box>
+                <box>
+                  <label>{isOnCheck}</label>
+                  <check bind={isOnCheck}>Check</check>
+                </box>
+                <box>
+                  <label>{isOnSwitch}</label>
+                  <switch bind={isOnSwitch}></switch>
+                </box>
+                <box>
+                  <radio-group>
+                    <radio name="male">Male</radio>
+                    <radio name="female">Female</radio>
+                  </radio-group>
+                </box>
               </flowBox>
-              <toggleButton>I am togglable</toggleButton>
               <label>Content 2</label>
               <button
                 onClick={() -> popoverRef.widget.popup()}>Opn</button>

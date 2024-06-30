@@ -8,7 +8,7 @@ export getContainerWidgets = (createClass, widgets, Gtk, WidgetState) ->
     options: utils.switchOrientation
     name: 'box'
     take: (W) ->
-      W::_add = (child) -> @widget.append child
+      W::_add = (child) -> if Gtk.selected == '4.0' then @widget.append child else @widget.add child
 
   widgets.grid = createClass Gtk.Grid,
     name: 'grid'
@@ -68,7 +68,10 @@ export getContainerWidgets = (createClass, widgets, Gtk, WidgetState) ->
       W::setBaseWidget = (baseWidget) ->
         if @base?
           @widget.remove @base
-        @widget.setChild baseWidget
+        if Gtk.selected is '4.0'
+          @widget.setChild baseWidget
+        else
+          @widget.add baseWidget
         @base = baseWidget
       
       W::addOverlay = (overlayWidget) ->
@@ -111,10 +114,16 @@ export getContainerWidgets = (createClass, widgets, Gtk, WidgetState) ->
     take: (W) ->
       W::_add = (child) ->
         if @children == 0
-          @widget.setStartChild child
+          if Gtk.selected is '4.0'
+            @widget.setStartChild child
+          else
+            @widget.add1 child
           @children = 1
         else
-          @widget.setEndChild child
+          if Gtk.selected is '4.0'
+            @widget.setEndChild child
+          else
+            @widget.add2 child
           @children = 0
 
   widgets.scrolledWindow = createClass Gtk.ScrolledWindow,
@@ -130,7 +139,11 @@ export getContainerWidgets = (createClass, widgets, Gtk, WidgetState) ->
     take: (W) ->
       # override
       W::_add = (child) ->
-        @widget.setChild child
+        if Gtk.selected is '4.0'
+          @widget.setChild child
+        else
+          @widget.add child
+        
 
   widgets.notebook = createClass Gtk.Notebook,
     name: 'notebook'
@@ -162,10 +175,15 @@ export getContainerWidgets = (createClass, widgets, Gtk, WidgetState) ->
   widgets.popover = createClass Gtk.Popover,
     options: (o) -> { ...o, position: utils.positions[o.position] or utils.positions.bottom }
     name: 'popover'
+    onInit: () ->
+      @$_isGhostWidget = true if Gtk.selected is '3.0'
     take: (W) ->
       # override
       W::_add = (child) ->
-        @widget.setChild child 
+        if Gtk.selected is '4.0'
+          @widget.setChild child
+        else
+          @widget.add child
 
       getters W, isUp: () -> @widget.isVisible()
 

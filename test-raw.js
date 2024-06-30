@@ -1,7 +1,7 @@
 var gi, GLib, Gtk, mainloop, app, onActivate, status;
 gi = require('node-gtk')
 GLib = gi.require('GLib', '2.0')
-Gtk = gi.require('Gtk', '4.0')
+Gtk = gi.require('Gtk', '3.0')
 
 gi.startLoop()
 

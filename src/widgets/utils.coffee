@@ -4,6 +4,12 @@ export getUtils = (Gtk) ->
 
   utils.switchOrientation = (options) -> { ...options, orientation: if options.orientation is 'horizontal' or options.orientation is 'h' then Gtk.Orientation.HORIZONTAL else Gtk.Orientation.VERTICAL }
 
+  utils.switchOptionsByLabels = (...labels) -> (options) ->
+    o = {...options}
+    for label in labels
+      o[label] = if options[label]? then options[label] else ''
+    o
+
   utils.alignments = {
     'start': Gtk.Align.START
     'end': Gtk.Align.END
@@ -26,5 +32,32 @@ export getUtils = (Gtk) ->
     'right': Gtk.PositionType.RIGHT
     'bottom': Gtk.PositionType.BOTTOM
   }
-  
+
+  utils.boundableWidget = (W, eventKey, { get: getFn, returns, set: setFn }) ->
+    W::bind = (value) ->
+      @on eventKey, () =>
+        if @$_ignoreNext___BINDCHANGE
+          @$_ignoreNext___BINDCHANGE = false
+          return
+        @$_ignoreNext___STATECHANGE = true
+        value.set getFn.call(@)
+        if returns then return (if typeof returns == "function" then returns() else returns)
+        else return null
+      value.target.on 'set', (val) =>
+        if @$_ignoreNext___STATECHANGE
+          @$_ignoreNext___STATECHANGE = false
+          return
+        @$_ignoreNext___BINDCHANGE = true
+        setFn.call @, val
+      setFn.call @, value.get()
+
+    W::onProp 'bind', (value) ->
+      @bind value
+
+  utils.initFn_FromOption = (opts...) ->
+    (_, options) ->
+      for opt in opts
+        if opt of options
+          @[opt] options[opt]
+    
   utils

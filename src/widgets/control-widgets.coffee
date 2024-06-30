@@ -1,4 +1,9 @@
+import { getUtils } from "./utils.coffee"
+
 export getControlWidgets = (createClass, widgets, Gtk) ->
+
+  utils = getUtils Gtk
+
   widgets.button = createClass Gtk.Button,
     options: (options) -> { label: options.text || 'Button' }
     name: 'button'
@@ -10,20 +15,60 @@ export getControlWidgets = (createClass, widgets, Gtk) ->
       (text, options) -> { text, ...options }
 
   widgets.toggleButton = createClass Gtk.ToggleButton,
-    options: (options) -> { label: options.label || 'Toggle Button' }
+    options: utils.switchOptionsByLabels 'label'
+    bindOptions: ['bind']
     name: 'toggleButton'
+    onInit: utils.initFn_FromOption 'bind'
+    take: (W) ->
+      W::_eventNameAliases = toggle: 'toggled'
+      utils.boundableWidget W, 'toggled',
+        set: (val) -> @widget.setActive val
+        get: () -> @widget.getActive()
+      
+  widgets.check = createClass Gtk.CheckButton,
+    inherits: widgets.toggleButton
+    name: 'check'
 
-  widgets.checkButton = createClass Gtk.CheckButton,
-    options: (options) -> { label: options.label || 'Check Button' }
-    name: 'checkButton'
+  widgets.radioGroup = createClass Gtk.Box,
+    inherits: widgets.box
+    name: 'radio-group',
+    onInit: ->
+      @radio = null
+      @group = []
+    take: (W) ->
+      W::_add = (child) ->
+        widgets.box::_add.call @, child
+        if child instanceof widgets.radio
+          name = child.wrappedByClass?.options?.name or @widget_children
+          unless @radio
+            @radio = name
+          if @group.length
+            child.setGroup @group[0]
+          @group.push child
+          child.on 'toggled', () =>
+            if child.getActive()
+              @setActive name
+      W::setActive = (name) ->
+        if @radio is name then return
+        @radio = name
+        @emit 'change:radio', name
 
-  widgets.radioButton = createClass Gtk.RadioButton,
+  print Gtk.RadioButton
+
+  widgets.radio = createClass Gtk.RadioButton,
     options: (options) -> { label: options.label || 'Radio Button' }
-    name: 'radioButton'
+    name: 'radio'
 
   widgets.switch = createClass Gtk.Switch,
-    options: (options) -> { active: options.active or false }
+    onInit: utils.initFn_FromOption 'bind'
     name: 'switch'
+    bindOptions: ['bind']
+    take: (W) ->
+      W::_eventNameAliases = toggle: 'state-set'
+      utils.boundableWidget W, 'state-set',
+        set: (val) -> @widget.setActive val
+        returns: true
+        get: () -> @widget.getActive()
 
   widgets.spinButton = createClass Gtk.SpinButton,
     options: (options) -> options
