@@ -34,8 +34,11 @@ export getUtils = (Gtk) ->
   }
 
   utils.boundableWidget = (W, eventKey, { get: getFn, returns, set: setFn }) ->
+    isDef = false
+    if eventKey.startsWith '-'
+      eventKey = eventKey.slice(1)
     W::bind = (value) ->
-      @on eventKey, () =>
+      (if isDef then @on else @target.on) eventKey, () =>
         if @$_ignoreNext___BINDCHANGE
           @$_ignoreNext___BINDCHANGE = false
           return
@@ -59,5 +62,13 @@ export getUtils = (Gtk) ->
       for opt in opts
         if opt of options
           @[opt] options[opt]
+  
+  utils.convertOptions = (Roptions) ->
+    (options) ->
+      o = {...options}
+      for key, val of options
+        if key of Roptions
+          o[key] = Roptions[key](val)
+      o
     
   utils

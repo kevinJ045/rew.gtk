@@ -11,7 +11,8 @@ using namespace imp('./main',
     isOnToggle = @state true
     isOnCheck = @state false
     isOnSwitch = @state false
-    <scrolledWindow>
+    radioSwitch = @state 'male'
+    <scrolled-window>
       <box>
         <grid maxCols={10}>
           <button>sss</button>
@@ -45,7 +46,7 @@ using namespace imp('./main',
                   <label>Yo Yo Yo</label>
                 </box>
               </popover>
-              <flowBox>
+              <flow-box>
                 <box>
                   <label>{isOnToggle}</label>
                   <toggleButton bind={isOnToggle}>Toggle</toggleButton>
@@ -59,12 +60,16 @@ using namespace imp('./main',
                   <switch bind={isOnSwitch}></switch>
                 </box>
                 <box>
-                  <radio-group>
+                  <label>{radioSwitch}</label>
+                  <radio-group bind={radioSwitch}>
                     <radio name="male">Male</radio>
                     <radio name="female">Female</radio>
                   </radio-group>
                 </box>
-              </flowBox>
+                <box>
+                  <spin-button adjustment:lower={1} adjustment:upper={10} adjustment:step-increment={1}></spin-button>
+                </box>
+              </flow-box>
               <label>Content 2</label>
               <button
                 onClick={() -> popoverRef.widget.popup()}>Opn</button>
@@ -80,4 +85,4 @@ using namespace imp('./main',
           </box>
         </paned>
       </box>
-    </scrolledWindow>
+    </scrolled-window>

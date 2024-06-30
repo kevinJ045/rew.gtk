@@ -127,7 +127,7 @@ export getContainerWidgets = (createClass, widgets, Gtk, WidgetState) ->
           @children = 0
 
   widgets.scrolledWindow = createClass Gtk.ScrolledWindow,
-    name: 'scrolledWindow',
+    name: 'scrolled-window',
     exclude: ['vertical', 'horizontal']
     options: (options, unMappedOptions) ->
       o = {...options}
@@ -191,7 +191,7 @@ export getContainerWidgets = (createClass, widgets, Gtk, WidgetState) ->
       W::popdown = () -> @widget.popdown()
 
   widgets.flowBox = createClass Gtk.FlowBox,
-    name: 'flowBox'
+    name: 'flow-box'
     take: (W) ->
       # override
       W::_add = (child) ->
@@ -199,4 +199,4 @@ export getContainerWidgets = (createClass, widgets, Gtk, WidgetState) ->
 
 
   widgets.listBox = createClass Gtk.ListBox,
-    name: 'listBox'
+    name: 'list-box'

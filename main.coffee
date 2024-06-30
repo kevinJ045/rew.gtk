@@ -22,8 +22,6 @@ class UiContext
     @Gtk = gi.require 'Gtk', config.gtk
     gi.startLoop()
 
-    print @Gtk
-
     @Gtk.init()
 
     @Gtk.selected = config.gtk
@@ -79,12 +77,41 @@ createElement = (ctx, elements, element, props = {}, ...children) ->
   if element of elements
     ElementClass = elements[element]
     callElt = {}
+    keep = {}
+
+    if ElementClass::__namespaceProps? and ElementClass::__namespaceProps.length > 0
+      keys = Object.keys(preparedProps)
+      for prop in ElementClass::__namespaceProps
+        matchingKeys = keys.filter (p) -> p.startsWith "#{prop}:"
+        camel = false
+        if prop.endsWith '*'
+          camel = true
+          prop = prop.slice(0, -1)
+        
+        if matchingKeys.length > 0
+          if preparedProps[prop]
+            preparedProps[prop] = { _default: preparedProps[prop] }
+          else preparedProps[prop] = {}
+          
+          for key in matchingKeys
+            actualKey = key.substring(prop.length + 1)
+            actualKey = actualKey.replace(/-./g, (match) -> if camel then match[1].toUpperCase() else '_'+match.slice(1))
+
+            preparedProps[prop][actualKey] = preparedProps[key]
+            delete preparedProps[key]
 
     if ElementClass::bindOptions
       for opt in ElementClass::bindOptions
+        keep = false
+        if opt.endsWith('*')
+          keep = true
+          opt = opt.slice(0, -1)
         if opt of (props or {})
-          delete preparedProps[opt]
-          callElt[opt] = props[opt]
+          if keep
+            preparedProps[opt] = props[opt]
+          else
+            delete preparedProps[opt]
+            callElt[opt] = props[opt]
 
     elt = new ElementClass preparedProps
 
@@ -208,8 +235,7 @@ createWidgetClass = (ctx) ->
 
     create: (element, props, ...children) -> createElement(ctx, elements, element, props, ...children)
 
-  createClass = (GtkClass, { options = ((o) -> o), create, exclude = [], bindOptions = [], inherits, onInit, name = '', take = (W) -> W } = {}) ->
-    print name, GtkClass
+  createClass = (GtkClass, { options = ((o) -> o), create, exclude = [], bindOptions = [], resolveNamespaceProps = [], inherits, onInit, name = '', take = (W) -> W } = {}) ->
     if typeof inherits is "function"
       originalOptions = options
       options = (o) ->
@@ -217,6 +243,7 @@ createWidgetClass = (ctx) ->
       create = () -> inherits::create
       exclude = [...exclude, ...inherits::_excludeOptions]
       bindOptions = [...bindOptions, ...inherits::bindOptions]
+      resolveNamespaceProps = [...resolveNamespaceProps, ...inherits::__namespaceProps]
       originalTake = take
       take = (W) ->
         inherits::_take W
@@ -257,6 +284,8 @@ createWidgetClass = (ctx) ->
     WidgetClass::bindOptions = bindOptions
     WidgetClass::_excludeOptions = exclude
     WidgetClass::__initiationCall = onInit or (->)
+    WidgetClass::__namespaceProps = resolveNamespaceProps
+    WidgetClass.GtkClass = GtkClass
 
     take WidgetClass
     WidgetClass::_take = take

@@ -32,30 +32,47 @@ export getControlWidgets = (createClass, widgets, Gtk) ->
   widgets.radioGroup = createClass Gtk.Box,
     inherits: widgets.box
     name: 'radio-group',
-    onInit: ->
-      @radio = null
+    bindOptions: ['bind*']
+    onInit: (_, options) ->
+      @radio = if options.bind? then options.bind.get() else null
       @group = []
+      if options.bind?
+        @bind options.bind
     take: (W) ->
       W::_add = (child) ->
         widgets.box::_add.call @, child
-        if child instanceof widgets.radio
+        if child instanceof Gtk.CheckButton
           name = child.wrappedByClass?.options?.name or @widget_children
-          unless @radio
+          if @radio?
+            if @radio == name
+              child.setActive true
+          else
             @radio = name
           if @group.length
             child.setGroup @group[0]
           @group.push child
+          child.$_RADIO_NAME = name;
           child.on 'toggled', () =>
             if child.getActive()
               @setActive name
+              
       W::setActive = (name) ->
         if @radio is name then return
         @radio = name
-        @emit 'change:radio', name
+        @group.forEach (r) ->
+          if r.$_RADIO_NAME is not @radio then r.setActive false
+        @emit 'switch', name
+      
+      W::getActive = () -> @radio
 
-  print Gtk.RadioButton
+      W::getActiveChild = () ->
+        return @group.find (g) -> g.$_RADIO_NAME is @radio
+      
+      utils.boundableWidget W, '-switch',
+        set: (val) -> @setActive val
+        get: () -> @getActive()
 
-  widgets.radio = createClass Gtk.RadioButton,
+  widgets.radio = createClass (if Gtk.selected is '4.0' then Gtk.CheckButton else Gtk.RadioButton),
     options: (options) -> { label: options.label || 'Radio Button' }
     name: 'radio'
 
@@ -72,13 +89,48 @@ export getControlWidgets = (createClass, widgets, Gtk) ->
 
   widgets.spinButton = createClass Gtk.SpinButton,
     options: (options) -> options
-    name: 'spinButton'
+    options: utils.convertOptions adjustment: (a) -> new Gtk.Adjustment a
+    resolveNamespaceProps: ['adjustment']
+    name: 'spin-button'
 
   widgets.comboBox = createClass Gtk.ComboBox,
-    name: 'comboBox'
+    onInit: utils.initFn_FromOption 'bind'
+    name: 'combo-box'
+    take: (W) ->
+      W::setState = (state) ->
+      
+      utils.boundableWidget W, '-change',
+        set: (val) -> @setActive val
+        get: () -> @getActive()
 
   widgets.comboBoxText = createClass Gtk.ComboBoxText,
-    name: 'comboBoxText'
+    name: 'combo-box-text'
+    take: (W) ->
+      W::setTextItems = (items) ->
+        @widget.removeAll()
+        items.forEach (item) -> @widget.appendText item
+
+      W::setActiveText = (text) ->
+        found = false
+        for i in [0...@widget.getNItems()]
+          if @widget.getActiveText() == text
+            @widget.setActive(i)
+            found = true
+            break
+        unless found
+          @widget.setActive(-1)
+
+      W::getActiveText = () ->
+        @widget.getActiveText()
+
+      W::getTextItems = () ->
+        items = []
+        for i in [0...@widget.getNItems()]
+          items.push @widget.getActiveText() if @widget.getActiveText()
+        items
+
+      W::removeAll = () ->
+        @widget.removeAll()
 
   widgets.entry = createClass Gtk.Entry,
     name: 'entry'
