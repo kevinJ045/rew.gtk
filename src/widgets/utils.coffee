@@ -34,11 +34,13 @@ export getUtils = (Gtk) ->
   }
 
   utils.boundableWidget = (W, eventKey, { get: getFn, returns, set: setFn }) ->
-    isDef = false
+    isDef = true
     if eventKey.startsWith '-'
+      isDef = false
       eventKey = eventKey.slice(1)
     W::bind = (value) ->
-      (if isDef then @on else @target.on) eventKey, () =>
+      target = if isDef then @widget else @target
+      target.on eventKey, () =>
         if @$_ignoreNext___BINDCHANGE
           @$_ignoreNext___BINDCHANGE = false
           return

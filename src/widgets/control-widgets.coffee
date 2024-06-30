@@ -133,7 +133,13 @@ export getControlWidgets = (createClass, widgets, Gtk) ->
         @widget.removeAll()
 
   widgets.entry = createClass Gtk.Entry,
-    name: 'entry'
+    bindOptions: ['bind']
+    onInit: utils.initFn_FromOption 'bind'
+    name: 'input'
+    take: (W) ->
+      utils.boundableWidget W, 'changed',
+        set: (val) -> @widget.setText val
+        get: () -> @widget.getText()
 
   widgets.searchEntry = createClass Gtk.SearchEntry,
     name: 'searchEntry'

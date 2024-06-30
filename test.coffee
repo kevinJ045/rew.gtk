@@ -12,6 +12,7 @@ using namespace imp('./main',
     isOnCheck = @state false
     isOnSwitch = @state false
     radioSwitch = @state 'male'
+    inputVal = @state 'This is a state'
     <scrolled-window>
       <box>
         <grid maxCols={10}>
@@ -70,7 +71,8 @@ using namespace imp('./main',
                   <spin-button adjustment:lower={1} adjustment:upper={10} adjustment:step-increment={1}></spin-button>
                 </box>
               </flow-box>
-              <label>Content 2</label>
+              <label>{inputVal}</label>
+              <input bind={inputVal}></input>
               <button
                 onClick={() -> popoverRef.widget.popup()}>Opn</button>
             </box>
