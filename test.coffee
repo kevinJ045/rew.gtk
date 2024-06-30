@@ -6,19 +6,61 @@ using namespace imp('./main',
   CustomEl = (props, name) ->
     <label>{name}</label>
   using refine(Window) ->
-    xs = @state "This is a state"
-    child = @state (<label>{'This is a whole element to be changed'}</label>)
-    <box orientation="vertical">
-      <label>{xs}</label>
+    active = @state 'First'
+    popoverRef = @ref()
+    <scrolledWindow>
       <box>
-        {child}
+        <grid maxCols={10}>
+          <button>sss</button>
+          <button>sss</button>
+          <button>sss</button>
+          <button>sss</button>
+        </grid>
+        <stack active={active}>
+          <button onClicked={() -> active.set 'Second'} name="First">Switch Two</button>
+          <button onClicked={() -> active.set 'Third'} name="Second">Switch Three</button>
+          <button onClicked={() -> active.set 'First'} name="Third">Switch One</button>
+        </stack>
+        <overlay>
+          <text>Hello</text>
+          <box>
+            <text>Ov</text>
+          </box>
+        </overlay>
+        <notebook active="hello">
+          <box>
+            <label>Tab 1</label>
+            <box>
+              <label>Content 1</label>
+            </box>
+          </box>
+          <box name="hello">
+            <label>Tab 2</label>
+            <box>
+              <popover useRef={popoverRef}>
+                <box>
+                  <label>Yo Yo Yo</label>
+                </box>
+              </popover>
+              <flowBox>
+                {
+                  <button>{i}</button> for i in [0..10]
+                }
+              </flowBox>
+              <toggleButton>I am togglable</toggleButton>
+              <label>Content 2</label>
+              <button
+                onClick={() -> popoverRef.widget.popup()}>Opn</button>
+            </box>
+          </box>
+        </notebook>
+        <paned position={30} orientation='horizontal'>
+          <box>
+            <text>LEft</text>
+          </box>
+          <box>
+            <text>Right</text>
+          </box>
+        </paned>
       </box>
-      <CustomEl>{'This is a custom element'}</CustomEl>
-      <button onClicked={() -> xs.set 'Changed'}>
-        {'Change the first label'}
-      </button>
-      <button
-       onClicked={() -> child.set <label>{'Changed the element'}</label>}>
-        {'Change the element'}
-      </button>
-    </box>
+    </scrolledWindow>

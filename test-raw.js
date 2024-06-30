@@ -33,5 +33,11 @@ onActivate = function() {
   return mainloop.run()
 }
 
+const active = {
+  property: ''
+}
+
+active.property
+
 app.on('activate', onActivate)
 status = app.run([])

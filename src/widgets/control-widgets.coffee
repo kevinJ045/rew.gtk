@@ -1,8 +1,9 @@
-getControlWidgets = (createClass, widgets, Gtk) ->
+export getControlWidgets = (createClass, widgets, Gtk) ->
   widgets.button = createClass Gtk.Button,
     options: (options) -> { label: options.text || 'Button' }
     name: 'button'
     take: (W) ->
+      W::_eventNameAliases = click: 'clicked'
       W::onClick = (handler) ->
         @on 'clicked', handler
     create: (W) ->
@@ -46,4 +47,3 @@ getControlWidgets = (createClass, widgets, Gtk) ->
   widgets.entryBuffer = createClass Gtk.EntryBuffer,
     name: 'entryBuffer'
     
-exports { getControlWidgets }

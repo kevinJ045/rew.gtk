@@ -35,13 +35,19 @@ useChild = (elt, child) ->
       child = newVal
       elt.add newVal
     child = child.get()
+  else if child.$_isGhostWidget
+    return
+  print elt unless elt.add
   elt.add child
 
 class Fragment
   constructor: (children) ->
     @children = children
 
-createElement = (ctx, elements, element, props, ...children) ->
+aspectProps = (props) ->
+  Object.fromEntries Object.entries(props).map(([prop, value]) -> [prop, if value instanceof WidgetState then value.get() else value])
+
+createElement = (ctx, elements, element, props = {}, ...children) ->
   if typeof element is "symbol" and props.isFragment
     return Fragment
 
@@ -54,20 +60,43 @@ createElement = (ctx, elements, element, props, ...children) ->
     else
       child
 
+  preparedProps = if props then aspectProps(props) else {}
+
   if element of elements
-    elt = new (elements[element])(props || {})
+    elt = new (elements[element])(preparedProps)
     for child in children
       useChild elt, child
-    
-    for key, value of props
+
+    for key, value of preparedProps
+      if props[key] instanceof WidgetState
+        props[key].target.on 'set', (newVal) ->
+          elt.setProp key, newVal
+
+      props[key].call(elt, elt) if key == 'useBy' and typeof props[key] == 'string'
+      if key == 'useRef' and props[key] instanceof WidgetRef
+        props[key].set elt
+
       if key.startsWith 'on'
         eventName = key.slice(2).toLowerCase()
+        if elt._eventNameAliases? and eventName of elt._eventNameAliases
+          eventName = elt._eventNameAliases[eventName]
         if eventName then elt.on eventName, value 
 
     return elt
   else if typeof element == "function"
-    return element(props, ...children)
-    
+    return element(props || {}, ...children)
+
+defaultExcludes = [
+  'name'
+  'useBy'
+  'useRef'
+]
+excludeStuff = (options, exclude) ->
+  o = {...options}
+  excludes = [...defaultExcludes, ...exclude]
+  for i in excludes
+    delete o[i]
+  o
 
 
 class WidgetState
@@ -84,19 +113,23 @@ class WidgetState
   set: (value) ->
     this._value = value
     @target.emit('set', value)
+
+class WidgetRef extends WidgetState
+  set: (value) ->
+    super.set value
+    @widget = value
   
 createWidgetClass = (ctx) ->
 
   elements = {}
   ctx.elements = elements;
   class Widget
-    constructor: (options, parent, name = 'widget') ->
+    constructor: (options, name) ->
       @widget = null
       @target = emitter()
       @name = name
       @init options
-      if parent and parent.widget and @widget
-        parent.add @widget
+      @
 
     init: ->
       @
@@ -112,16 +145,26 @@ createWidgetClass = (ctx) ->
       @target.off event, handler
 
     _add: (child) ->
-      @widget.add child.widget
+      try
+        @widget.add child.widget
+      catch
+        @widget.append child.widget
+      
     _text: (text) ->
       @widget.setLabel text
 
+    setProp: (prop, value) ->
+      @widget.setProperty prop, value
+    
+
+    widget_children: []
     add: (child) ->
       if typeof child == "string" || typeof child == "number"
         @_text child
       else if child instanceof ctx.Gtk.Widget
         @_add child
       else if child instanceof Widget
+        @widget_children.push child
         @_add child.widget
 
     remove: (child) ->
@@ -137,24 +180,41 @@ createWidgetClass = (ctx) ->
 
     create: (element, props, ...children) -> createElement(ctx, elements, element, props, ...children)
 
-  createClass = (GtkClass, { options = ((o) -> o), create, inherits, onInit, name = '', take = (W) -> W } = {}) ->
+  createClass = (GtkClass, { options = ((o) -> o), create, exclude = [], inherits, onInit, name = '', take = (W) -> W } = {}) ->
     if typeof inherits is "function"
       originalOptions = options
       options = (o) ->
         originalOptions inherits::_optionsCreate(o)
       create = () -> inherits::create
 
+    propSet = []
+    onProp = (prop, cb) ->
+      propSet.push name: prop, cb: cb
+
     class WidgetClass extends Widget
-      constructor: (options, parent) ->
-        super options, parent, WidgetClass::name
-      
-      init: ->
-        @widget = new GtkClass options (@options or {})
+      constructor: (options) ->
+        super options, WidgetClass::name
+
+      setProp: (prop, value) ->
+        if prop in exclude
+          propSet
+            .filter (p) -> p.name == prop
+            .forEach (p) => p.cb.call @, value
+          return @
+        newOpt = options ({...@options, [prop]: value})
+        @widget.setProperty prop, newOpt[prop]
+        @
+
+      init: (opts) ->
+        @options = {...opts, ...(@options or {})}
+        @widget = new GtkClass options(excludeStuff(@options, exclude), @options)
         @widget.wrappedByClass = @;
+        @_excludeOptions = exclude;
         onInit.call(@, @widget, @options) if typeof onInit is "function"
 
     WidgetClass::name = name if name isnt null
     WidgetClass::_optionsCreate = options
+    WidgetClass::onProp = onProp
 
     take WidgetClass
 
@@ -166,14 +226,14 @@ createWidgetClass = (ctx) ->
     elements[WidgetClass::name] = WidgetClass if name isnt null
     WidgetClass
 
-  getContainerWidgets createClass, elements, ctx.Gtk
-  getControlWidgets createClass, elements, ctx.Gtk
-  getDisplayWidgets createClass, elements, ctx.Gtk
-  getSelectionWidgets createClass, elements, ctx.Gtk
-  getSelectionWidgets createClass, elements, ctx.Gtk
-  getLayoutWidgets createClass, elements, ctx.Gtk
-  getMiscellaneousWidgets createClass, elements, ctx.Gtk
-  getGestureWidgets createClass, elements, ctx.Gtk
+  getContainerWidgets createClass, elements, ctx.Gtk, WidgetState
+  getControlWidgets createClass, elements, ctx.Gtk, WidgetState
+  getDisplayWidgets createClass, elements, ctx.Gtk, WidgetState
+  getSelectionWidgets createClass, elements, ctx.Gtk, WidgetState
+  getSelectionWidgets createClass, elements, ctx.Gtk, WidgetState
+  getLayoutWidgets createClass, elements, ctx.Gtk, WidgetState
+  getMiscellaneousWidgets createClass, elements, ctx.Gtk, WidgetState
+  getGestureWidgets createClass, elements, ctx.Gtk, WidgetState
   Widget
 
 createWindow = (ctx, options) ->
@@ -240,6 +300,8 @@ createUiApp = (options) ->
       # state.target.on 'set', ->
       #   windowContext.render()
       state
+    
+    windowContext.ref = () -> new WidgetRef
 
     windowContext.render = ->
       windowContext.$$renders++
