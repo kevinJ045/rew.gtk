@@ -1,27 +1,40 @@
-getDisplayWidgets = ( createClass, widgets, Gtk) ->
-  widgets.text = createClass Gtk.Label,
+import { getUtils } from "./utils.coffee"
+
+getDisplayWidgets = (createClass, widgets, Gtk, Gio) ->
+  utils = getUtils Gtk
+  widgets.label = createClass Gtk.Label,
     options: (options) -> { label: options.text || 'Label' }
-    name: 'label'
+    name: 'text'
     create: (W) ->
       (text, options) -> { text, ...options }
 
   widgets.textView = createClass Gtk.TextView,
-    name: 'textView'
+    name: 'text-view'
 
   widgets.image = createClass Gtk.Image,
-    options: (options) -> { file: options.file || '' }
+    options: (options) ->
+      if options.icon?
+        options.icon_name = options.icon
+        delete options.icon
+      {
+        file: options.file || '',
+        ...options
+      }
     name: 'image'
     create: (W) ->
       (file, options) -> { file, ...options }
 
   widgets.progressBar = createClass Gtk.ProgressBar,
-    name: 'progressBar'
+    name: 'progress-bar'
+    take: (W) ->
+      # override
+      W::_text = (text) -> @widget.setText text
 
   widgets.levelBar = createClass Gtk.LevelBar,
-    name: 'levelBar'
+    name: 'level-bar'
 
   widgets.statusBar = createClass Gtk.StatusBar,
-    name: 'statusBar'
+    name: 'status-bar'
 
   widgets.infoBar = createClass Gtk.InfoBar,
     name: 'infoBar'

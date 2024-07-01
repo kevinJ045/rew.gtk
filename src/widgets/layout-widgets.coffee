@@ -1,9 +1,28 @@
 getLayoutWidgets = (createClass, widgets, Gtk) ->
   widgets.headerBar = createClass Gtk.HeaderBar,
-    name: 'headerBar'
+    name: 'header-bar'
+    take: (W) ->
+      # override
+      W::$_children_count = 0
+      W::_centerWidget = (child) ->
+        @widget.setTitleWidget child
+      W::_add = (child) ->
+        if @$_children_count == 0
+          @$_children_count++
+          @widget.packStart child
+        else if @$_children_count == 1
+          @$_children_count++
+          @_centerWidget child
+        else
+          @widget.packEnd child
 
   widgets.actionBar = createClass Gtk.ActionBar,
-    name: 'actionBar'
+    name: 'action-bar'
+    inherits: widgets.headerBar
+    take: (W) ->
+      # override
+      W::_centerWidget = (child) ->
+        @widget.setCenterWidget child
 
   widgets.toolbar = createClass Gtk.Toolbar,
     name: 'toolbar'

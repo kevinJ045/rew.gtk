@@ -14,12 +14,15 @@ appOptions = struct
 
   gtk: '4.0'
   glib: '2.0'
+  gio: false
 
 class UiContext
   constructor: (config = {}) ->
     @config = appOptions config
     @GLib = gi.require 'GLib', config.glib
     @Gtk = gi.require 'Gtk', config.gtk
+    if @config.gio
+      @Gio = gi.require 'Gio', if config.gio isnt true then config.gio
     gi.startLoop()
 
     @Gtk.init()
@@ -41,6 +44,7 @@ class UiContext
       @status = @gtk_app.run([])
 
 useChild = (elt, child) ->
+  unless child then return
   if child instanceof WidgetState
     child.target.on 'set', (newVal) ->
       elt.remove child
@@ -49,7 +53,9 @@ useChild = (elt, child) ->
     child = child.get()
   else if child.$_isGhostWidget
     return
-  print elt unless elt.add
+  if child.options?.window_prop?
+    elt.__props[child.options.window_prop] = child
+    return
   elt.add child
 
 class Fragment
@@ -57,7 +63,7 @@ class Fragment
     @children = children
 
 aspectProps = (props) ->
-  Object.fromEntries Object.entries(props).map(([prop, value]) -> [prop, if value instanceof WidgetState then value.get() else value])
+  Object.fromEntries Object.entries(props).filter(([prop]) -> not prop.startsWith 'on:').map(([prop, value]) -> [prop, if value instanceof WidgetState then value.get() else value])
 
 createElement = (ctx, elements, element, props = {}, ...children) ->
   if typeof element is "symbol" and props.isFragment
@@ -78,6 +84,8 @@ createElement = (ctx, elements, element, props = {}, ...children) ->
     ElementClass = elements[element]
     callElt = {}
     keep = {}
+
+    # print element
 
     if ElementClass::__namespaceProps? and ElementClass::__namespaceProps.length > 0
       keys = Object.keys(preparedProps)
@@ -112,6 +120,11 @@ createElement = (ctx, elements, element, props = {}, ...children) ->
           else
             delete preparedProps[opt]
             callElt[opt] = props[opt]
+    
+    for key, value of preparedProps
+      if key.match('-')
+        preparedProps[key.replace(/-(.)/g, '_$1')] = value
+        delete preparedProps[key]
 
     elt = new ElementClass preparedProps
 
@@ -129,9 +142,10 @@ createElement = (ctx, elements, element, props = {}, ...children) ->
       props[key].call(elt, elt) if key == 'useBy' and typeof props[key] == 'string'
       if key == 'useRef' and props[key] instanceof WidgetRef
         props[key].set elt
-
-      if key.startsWith 'on'
-        eventName = key.slice(2).toLowerCase()
+    
+    for key, value of (props or {})
+      if key.startsWith 'on:'
+        eventName = key.slice(3).toLowerCase()
         if elt._eventNameAliases? and eventName of elt._eventNameAliases
           eventName = elt._eventNameAliases[eventName]
         if eventName then elt.on eventName, value 
@@ -145,6 +159,7 @@ defaultExcludes = [
   'useBy'
   'useRef'
   'bind'
+  'window_prop'
 ]
 excludeStuff = (options, exclude) ->
   o = {...options}
@@ -168,6 +183,7 @@ class WidgetState
   set: (value, notify = true) ->
     this._value = value
     if notify then @target.emit('set', value)
+    true
 
 class WidgetRef extends WidgetState
   set: (value) ->
@@ -179,6 +195,7 @@ createWidgetClass = (ctx) ->
   elements = {}
   ctx.elements = elements;
   class Widget
+    __props: {}
     constructor: (options, name) ->
       @widget = null
       @target = emitter()
@@ -333,12 +350,65 @@ createWindow = (ctx, options) ->
     else
       _setChild child
 
+  windowContext.titleBar = (titleBar) ->
+    if titleBar instanceof ctx.Widget
+      window.setTitlebar titleBar.widget
+    else
+      window.setTitlebar titleBar
+
+
   windowContext.show = -> if ctx.config.gtk is '4.0' then window.show() else window.showAll()
   windowContext.present = -> window.present()
   windowContext.hide = -> window.hide()
   
   windowContext
+
+class WidgetStateStore
+  constructor: (values) ->
+    @_values = values
+    for key, value of values then do (value) =>
+        getters this, {
+          ['$'+key]: () -> value.get()
+          [key]: () -> value
+        }
+        setters this, {
+          [key]: (val) -> value.set val
+        }
+    @
+  
+
+
+createStoreFor = (ctx, wctx) ->
+  store = {}
+  store.prototype = {}
+
+  store::new = (cb) ->
+    ccc_tx = {
+      state: wctx.state,
+      ref: wctx.ref
+      surge: wctx.surge
+      Store: wctx.store
+    }
+    exceptionKeys = Object.keys ccc_tx
+    cb.call(ccc_tx)
+    store::derive ccc_tx, exceptionKeys
     
+  store::derive = (object, exceptionKeys = []) ->
+    str = {} # store
+    for key, val of object
+      if key in exceptionKeys then continue
+      do (val) ->
+        str[key] = if val instanceof WidgetState then val else wctx.state val
+    return new WidgetStateStore str
+  
+  store::flux = (cb) ->
+    s = store::new cb
+    return Usage::create '@ui._context', (cb) ->
+      return cb.call({...wctx, store: s}, ctx)
+
+  store
+
+
 
 createUiApp = (options) ->
   ctx = new UiContext options
@@ -360,21 +430,36 @@ createUiApp = (options) ->
     if ctx.config.gtk is '4.0'
       windowContext.show();
       windowContext.window.present() 
+    
+    target = emitter()
 
     windowContext.$$states = {};
     windowContext.$$renders = 0;
     windowContext.$$stateCount = 0;
+
     windowContext.state = (value) ->
       id = windowContext.$$stateCount
       windowContext.$$stateCount++
       return windowContext.$$states[id] if windowContext.$$states[id]?
       state = new WidgetState value
       windowContext.$$states[id] = state
-      # state.target.on 'set', ->
-      #   windowContext.render()
+      state.target.on 'set', ->
+        target.emit 'update', state
+        # windowContext.render()
       state
+
+    windowContext.Store = createStoreFor ctx, windowContext
+      
+    windowContext.surge = (state, mapper) ->
+      newState = windowContext.state mapper state.get()
+      state.target.on 'set', (newVal) ->
+        newState.set mapper newVal
+      newState
     
     windowContext.ref = () -> new WidgetRef
+
+    windowContext.on = (e, f) ->
+      target.on e, f
 
     windowContext.render = ->
       windowContext.$$renders++
@@ -382,13 +467,14 @@ createUiApp = (options) ->
       currentChild = windowContext.window.getChild()
       if currentChild?
         currentChild.wrappedByClass.emit('destroy') if currentChild.wrappedByClass?
-        # windowContext.window.remove currentChild
-        # currentChild.destroy()
       widget = cb.call(windowContext)
+      if widget.__props.title_bar
+        windowContext.titleBar widget.__props.title_bar
       windowContext.setChild widget
     
     windowContext.render()
     windowContext.show() if ctx.config.gtk is '3.0'
+    target.emit 'ready'
   ctx.Window.prototype = {}
   ctx.Window::create = (options) -> createWindow ctx, options
   

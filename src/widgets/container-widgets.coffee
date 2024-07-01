@@ -191,6 +191,7 @@ export getContainerWidgets = (createClass, widgets, Gtk, WidgetState) ->
       W::popdown = () -> @widget.popdown()
 
   widgets.flowBox = createClass Gtk.FlowBox,
+    options: utils.switchOrientation
     name: 'flow-box'
     take: (W) ->
       # override

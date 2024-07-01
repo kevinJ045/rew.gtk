@@ -9,6 +9,8 @@ export getControlWidgets = (createClass, widgets, Gtk) ->
     name: 'button'
     take: (W) ->
       W::_eventNameAliases = click: 'clicked'
+      W::_add = (child) ->
+        @widget.setChild child
       W::onClick = (handler) ->
         @on 'clicked', handler
     create: (W) ->
@@ -142,11 +144,14 @@ export getControlWidgets = (createClass, widgets, Gtk) ->
         get: () -> @widget.getText()
 
   widgets.searchEntry = createClass Gtk.SearchEntry,
-    name: 'searchEntry'
+    inherits: widgets.entry
+    name: 'search'
 
   widgets.passwordEntry = createClass Gtk.PasswordEntry,
-    name: 'passwordEntry'
+    inherits: widgets.entry
+    name: 'password'
 
   widgets.entryBuffer = createClass Gtk.EntryBuffer,
-    name: 'entryBuffer'
+    inherits: widgets.entry
+    name: 'buffer-input'
     
