@@ -10,7 +10,10 @@ export getControlWidgets = (createClass, widgets, Gtk) ->
     take: (W) ->
       W::_eventNameAliases = click: 'clicked'
       W::_add = (child) ->
-        @widget.setChild child
+        if Gtk.selected is '4.0'
+          @widget.setChild child
+        else
+          @widget.add child
       W::onClick = (handler) ->
         @on 'clicked', handler
     create: (W) ->
@@ -51,7 +54,7 @@ export getControlWidgets = (createClass, widgets, Gtk) ->
           else
             @radio = name
           if @group.length
-            child.setGroup @group[0]
+            if Gtk.selected is '4.0' then child.setGroup @group[0]
           @group.push child
           child.$_RADIO_NAME = name;
           child.on 'toggled', () =>

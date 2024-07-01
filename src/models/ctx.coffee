@@ -18,12 +18,11 @@ export class UiContext
     if config.gtk is '4.0'
       @appLoop = @GLib.MainLoop.new(null, false)
     @gtk_app = new @Gtk.Application(config.package, 0)
+
+    @require = (name, version) => gi.require(name, version)
+    @startMain = () =>
+      if @config.gtk is '3.0'
+        @Gtk.main()
+      else
+        @status = @gtk_app.run([])
     @
-
-  require: (name, version) -> gi.require(name, version)
-
-  startMain: () ->
-    if @config.gtk is '3.0'
-      @Gtk.main()
-    else
-      @status = @gtk_app.run([])

@@ -5,7 +5,10 @@ getLayoutWidgets = (createClass, widgets, Gtk) ->
       # override
       W::$_children_count = 0
       W::_centerWidget = (child) ->
-        @widget.setTitleWidget child
+        if Gtk.selected is '4.0'
+          @widget.setTitleWidget child
+        else
+          @widget.add child
       W::_add = (child) ->
         if @$_children_count == 0
           @$_children_count++
