@@ -1,6 +1,6 @@
 import { getUtils } from "./utils.coffee"
 
-getDisplayWidgets = (createClass, widgets, Gtk, Gio) ->
+getDisplayWidgets = (createClass, widgets, Gtk) ->
   utils = getUtils Gtk
   widgets.label = createClass Gtk.Label,
     options: (options) -> { label: options.text || 'Label' }

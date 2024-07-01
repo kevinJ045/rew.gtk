@@ -1,6 +1,6 @@
 import { getUtils } from "./utils.coffee"
 
-export getContainerWidgets = (createClass, widgets, Gtk, WidgetState) ->
+export getContainerWidgets = (createClass, widgets, Gtk) ->
 
   utils = getUtils Gtk
 

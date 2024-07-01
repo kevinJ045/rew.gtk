@@ -11,6 +11,8 @@ fi
 # Package(s) to be installed
 PACKAGES="gtk4 gtk3 glib gobject-introspection"
 
+echo "Installing: $PACKAGES"
+
 # Install the package(s) based on the distribution
 case $DISTRO in
     debian|ubuntu|linuxmint)
