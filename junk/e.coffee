@@ -1,4 +1,4 @@
-app.on 'ready', (ctx) -> 
+app.on 'ready', (ctx) ->
   ctx
     .root
     .button 'hello', style: { width: '100' }
