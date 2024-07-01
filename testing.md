@@ -12,7 +12,7 @@ In the `main.coffee` file, you can put:
 ```coffee
 using namespace imp('rew.gtk',
   gtk: '4.0',
-  package: app.config.manifest.package
+  package: packageName or app.config.manifest.package
 ).setup ->
   using JSX as Widget::create
   using refine(Window) ->

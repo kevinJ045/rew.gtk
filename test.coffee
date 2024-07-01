@@ -1,6 +1,6 @@
 using namespace imp('./main',
   gtk: '4.0',
-  package: app.config.manifest.package
+  package: packageName
 ).setup ->
   using JSX as Widget::create
   using refine(Window) ->
