@@ -2,6 +2,8 @@ using namespace imp('./main',
   gtk: '4.0',
   package: packageName
 ).setup ->
+  print(Object.keys currentNamespace)
+  process.exit()
   using JSX as Widget::create
   using refine(Window) ->
     using refine(

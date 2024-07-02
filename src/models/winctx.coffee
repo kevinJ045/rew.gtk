@@ -83,9 +83,10 @@ export fixateWindow = (ctx, cb, windowContext) ->
     if currentChild?
       currentChild.wrappedByClass.emit('destroy') if currentChild.wrappedByClass?
     widget = cb.call(windowContext)
-    if widget.__props.title_bar
+    unless widget && (widget instanceof ctx.Widget or widget instanceof ctx.Gtk.Widget) then return
+    if widget?.__props?.title_bar
       windowContext.titleBar widget.__props.title_bar
-    windowContext.setChild widget
+    windowContext.setChild widget if widget?
   
   windowContext.render()
   windowContext.show() if ctx.config.gtk is '3.0'
