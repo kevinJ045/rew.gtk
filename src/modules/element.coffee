@@ -97,7 +97,7 @@ export createElement = (ctx, elements, element, props = {}, ...children) ->
         props[key].target.on 'set', (newVal) ->
           elt.setProp key, newVal
 
-      props[key].call(elt, elt) if key == 'useBy' and typeof props[key] == 'string'
+      props[key].call(elt, elt) if key == 'useBy' and typeof props[key] == 'function'
       if key == 'useRef' and props[key] instanceof WidgetRef
         props[key].set elt
     

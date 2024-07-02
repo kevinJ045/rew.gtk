@@ -1,4 +1,6 @@
 using namespace imp('./main', gtk: '4.0').setup ->
-	using Window, ->
-		print Object.keys @
-		@setChild new Gtk.Button( label: 'Click Me' )
+	using JSX, Widget::create
+	using refine(Window) ->
+		<box>
+			<text useBy={() -> print @}>SSS</text>
+		</box>
