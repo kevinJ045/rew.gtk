@@ -3,6 +3,7 @@ gi = require 'node-gtk'
 
 export class UiContext
   constructor: (config = {}) ->
+    @UI = @
     @config = appOptions config
     @GLib = gi.require 'GLib', config.glib
     @Gtk = gi.require 'Gtk', config.gtk

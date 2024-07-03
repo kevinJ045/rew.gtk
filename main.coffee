@@ -8,6 +8,7 @@ UI = Usage::create 'gui', (options, cb) ->
     cb = options
     options = { gtk: '4.0' }
   cb createUiApp appOptions options
+  
 
 UI.init = (options) -> createUiApp appOptions options
 

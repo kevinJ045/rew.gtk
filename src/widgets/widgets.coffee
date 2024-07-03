@@ -1,4 +1,5 @@
-import * as W from "../modules/widget.coffee"
+import { getRegistry } from "../modules/registry.coffee"
+import { getWClass } from "../modules/widget.coffee"
 import { excludeStuff } from "../modules/utils.coffee"
 
 import { getContainerWidgets } from './container-widgets.coffee'
@@ -14,7 +15,8 @@ export createWidgetClass = (ctx) ->
 
   elements = {}
   ctx.elements = elements;
-  Widget = W.getWClass ctx, elements
+  Widget = getWClass ctx, elements
+
   createClass = (GtkClass, { options = ((o) -> o), create, exclude = [], bindOptions = [], resolveNamespaceProps = [], inherits, onInit, name = '', take = (W) -> W } = {}) ->
     if typeof inherits is "function"
       originalOptions = options
@@ -77,6 +79,32 @@ export createWidgetClass = (ctx) ->
 
     elements[WidgetClass::name] = WidgetClass if name isnt null
     WidgetClass
+
+  ###*
+   * @param cfg {{ gtk: new () => {}, constructor?: () => any, name?: string, onCreate: () => void }}
+  *####
+  Widget::class = (cfg) ->
+    if typeof cfg == "function" then cfg = cfg()
+    GtkClass = cfg.gtk;
+    delete cfg.gtk;
+    o = {}
+    o.onInit = cfg.constructor;
+    delete cfg.constructor;
+    if cfg.factorArguments
+      o.create = cfg.factorArguments;
+      delete cfg.factorArguments;
+    
+    if cfg.name
+      o.name = cfg.name;
+      delete cfg.name;
+    
+    o.take = (W) ->
+      cfg.onCreate(W) if cfg.onCreate?
+      for key, value of cfg
+        W::[key] = value
+    return createClass GtkClass, o
+
+  getRegistry ctx, elements
 
   getContainerWidgets createClass, elements, ctx.Gtk
   getControlWidgets createClass, elements, ctx.Gtk

@@ -5,6 +5,9 @@ export class WidgetState
   constructor: (value) ->
     @_value = value
     @target = emitter()
+
+    getters this, value: () => @get()
+    setters this, value: (val) => @set(val)
     @
 
   get: () ->

@@ -1,5 +1,4 @@
-import { WidgetRef, WidgetState } from "../modules/state.coffee"
-import { createStoreFor } from "../modules/store.coffee"
+import { extendComponent } from "../modules/comp.coffee"
 
 
 export createWindow = (ctx, options) ->
@@ -38,36 +37,7 @@ export createWindow = (ctx, options) ->
   windowContext.present = -> window.present()
   windowContext.hide = -> window.hide()
 
-  target = emitter()
-
-  windowContext.$$states = {};
-  windowContext.$$renders = 0;
-  windowContext.$$stateCount = 0;
-
-  windowContext.state = (value) ->
-    id = windowContext.$$stateCount
-    windowContext.$$stateCount++
-    return windowContext.$$states[id] if windowContext.$$states[id]?
-    state = new WidgetState value
-    windowContext.$$states[id] = state
-    state.target.on 'set', ->
-      target.emit 'update', state
-      # windowContext.render()
-    state
-
-  windowContext.Store = createStoreFor ctx, windowContext
-    
-  windowContext.surge = (state, mapper) ->
-    newState = windowContext.state mapper state.get()
-    state.target.on 'set', (newVal) ->
-      newState.set mapper newVal
-    newState
-  
-  windowContext.ref = () -> new WidgetRef
-
-  windowContext.on = (e, f) -> target.on e, f
-  windowContext.off = (e, f) -> target.off e, f
-  windowContext.emit = (e, f) -> target.emit e, f
+  extendComponent ctx, windowContext
   
   windowContext
 
