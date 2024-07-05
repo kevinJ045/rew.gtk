@@ -1,12 +1,11 @@
 const gi = require('node-gtk');
 const Gtk = gi.require('Gtk', '4.0');
 const GLib = gi.require('GLib', '2.0');
-const GL = gi.require('Gdk', '4.0').GL;
+const Gdk = gi.require('Gdk', '4.0');
 
 gi.startLoop();
 Gtk.init();
 
-// Shader source code
 const vertexShaderSource = `
   #version 330 core
   layout(location = 0) in vec3 aPos;
@@ -25,7 +24,7 @@ const fragmentShaderSource = `
   }
 `;
 
-function compileShader(gl, source, type) {
+function createShader(gl, type, source) {
   const shader = gl.createShader(type);
   gl.shaderSource(shader, source);
   gl.compileShader(shader);
@@ -37,7 +36,7 @@ function compileShader(gl, source, type) {
   return shader;
 }
 
-function linkProgram(gl, vertexShader, fragmentShader) {
+function createProgram(gl, vertexShader, fragmentShader) {
   const program = gl.createProgram();
   gl.attachShader(program, vertexShader);
   gl.attachShader(program, fragmentShader);
@@ -50,7 +49,6 @@ function linkProgram(gl, vertexShader, fragmentShader) {
   return program;
 }
 
-// Vertex data for the triangle
 const vertices = new Float32Array([
   -0.5, -0.5, 0.0,
    0.5, -0.5, 0.0,
@@ -70,15 +68,13 @@ app.on('activate', () => {
   let program, vao, vbo;
 
   glArea.on('realize', () => {
-    const gl = glArea.getContext().getApi();
+    const gl = glArea.getContext();
 
-    // Compile shaders and link the program
-    const vertexShader = compileShader(gl, vertexShaderSource, gl.VERTEX_SHADER);
-    const fragmentShader = compileShader(gl, fragmentShaderSource, gl.FRAGMENT_SHADER);
-    program = linkProgram(gl, vertexShader, fragmentShader);
+    const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
+    const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
+    program = createProgram(gl, vertexShader, fragmentShader);
     if (!program) return;
 
-    // Create and bind VAO and VBO
     vao = gl.createVertexArray();
     gl.bindVertexArray(vao);
 
@@ -86,7 +82,6 @@ app.on('activate', () => {
     gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
     gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
 
-    // Link vertex attributes
     const positionLocation = gl.getAttribLocation(program, 'aPos');
     gl.vertexAttribPointer(positionLocation, 3, gl.FLOAT, false, 3 * Float32Array.BYTES_PER_ELEMENT, 0);
     gl.enableVertexAttribArray(positionLocation);
@@ -104,12 +99,12 @@ app.on('activate', () => {
     gl.bindVertexArray(vao);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
     gl.bindVertexArray(null);
-    
-    return true;  // Prevents further propagation
+
+    return true;
   });
 
   win.setChild(glArea);
   win.show();
 });
 
-app.run(null);
+app.run([]);

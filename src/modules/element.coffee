@@ -6,10 +6,20 @@ export useChild = (elt, child) ->
   unless child then return
   if child instanceof WidgetState
     child.target.on 'set', (newVal) ->
-      elt.remove child
+      if Array.isArray child
+        child.forEach (e) -> elt.remove e
+      else
+        elt.remove child
       child = newVal
-      elt.add newVal
+      if Array.isArray child
+        child.forEach (e) -> elt.add e
+      else
+        elt.add child
     child = child.get()
+    if Array.isArray child
+      child.forEach (e) -> elt.add e
+    else
+      elt.add child
   else if child.$_isGhostWidget
     return
   if child.options?.window_prop?
