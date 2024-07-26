@@ -2,11 +2,49 @@ import { getUtils } from "./utils.coffee"
 
 getDisplayWidgets = (createClass, widgets, Gtk) ->
   utils = getUtils Gtk
+
+  getLM = (options) ->
+    usesMarkup = if ['color', 'weight', 'underline'].find((i) => i of options) then true else false
+    label = options.text || ''
+    if usesMarkup and label.length
+      label = """<span #{
+      (if options.color then "foreground=\"#{options.color}\"" else '')
+      } #{
+      (if options.weight then "weight=\"#{options.weight}\"" else '')
+      } #{
+      (if options.underline then "underline=\"#{options.underline}\"" else '')
+      }>""" + label + "</span>"
+    return {usesMarkup, label}
+
   widgets.label = createClass Gtk.Label,
-    options: (options) -> { label: options.text || 'Label' }
+    options: (options) ->
+      {label, usesMarkup} = getLM options or {}
+      { label, use_markup: options.use_markup or usesMarkup }
     name: 'text'
+    exclude: ['color', 'underline', 'weight']
     create: (W) ->
       (text, options) -> { text, ...options }
+    take: (W) ->
+      # override
+      W::_updateText = () ->
+        {label, usesMarkup} = getLM @options
+        @widget.setProperty('use_markup', usesMarkup)
+        @widget.setLabel label
+
+      W::onProp 'color', (c) ->
+        @options.color = c
+        @_updateText()
+      W::onProp 'underline', (c) ->
+        @options.underline = c
+        @_updateText()
+      W::onProp 'weight', (c) ->
+        @options.weight = c
+        @_updateText()
+
+      W::_text = (text) ->
+        @options.text = text
+        @_updateText()
+        
 
   widgets.textView = createClass Gtk.TextView,
     name: 'text-view'

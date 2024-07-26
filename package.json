@@ -6,10 +6,16 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": ["Test", "UI", "Rew", "Library"],
+  "keywords": [
+    "Test",
+    "UI",
+    "Rew",
+    "Library"
+  ],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "gl-matrix": "^3.4.3",
     "node-gtk": "^0.14.0"
   }
 }

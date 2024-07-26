@@ -1,4 +1,5 @@
 import { createElement } from "../modules/element.coffee"
+Styleway = imp 'styleway'
 
 export getWClass = (ctx, elements) -> Widget = class
     __props: {}
@@ -8,6 +9,30 @@ export getWClass = (ctx, elements) -> Widget = class
       @name = name
       @init options
       @
+
+    _style: {
+      _id: genID(),
+      css: "",
+      provider: null,
+      current: {}
+    };
+    _initStyles: ->
+      try
+        provider = new ctx.Gtk.CssProvider();
+        screen = ctx.Gdk.Display.getDefault();
+        @_style.provider = provider;
+        @_updateStyles();
+        ctx.Gtk.StyleContext.addProviderForDisplay(screen, provider, ctx.Gtk.STYLE_PROVIDER_PRIORITY_USER);
+        @widget.getStyleContext().addClass('wid-' + @_style._id);
+        @widget.getStyleContext().addClass(@name) if (@name and typeof @name == 'string' and @name.length > 1)
+      std::void
+    _updateStyles: ->
+      try
+        css = Styleway { ".wid-#{@_style._id}": @_style.current or {} }
+        @_style.provider.loadFromString(css);
+        @_style.css = css;
+      std::void
+
 
     init: ->
       @

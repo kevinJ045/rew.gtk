@@ -107,20 +107,22 @@ export createElement = (ctx, elements, element, props = {}, ...children) ->
       elt[key](val)
 
     for key, value of preparedProps
-      if props[key] instanceof WidgetState
-        props[key].target.on 'set', (newVal) ->
-          elt.setProp key, newVal
+      do (key) ->
+        if props[key] instanceof WidgetState
+          props[key].target.on 'set', (newVal) ->
+            elt.setProp key, newVal
 
-      props[key].call(elt, elt) if key == 'useBy' and typeof props[key] == 'function'
-      if key == 'useRef' and props[key] instanceof WidgetRef
-        props[key].set elt
+        props[key].call(elt, elt) if key == 'useBy' and typeof props[key] == 'function'
+        if key == 'useRef' and props[key] instanceof WidgetRef
+          props[key].set elt
     
     for key, value of (props or {})
-      if key.startsWith 'on:'
-        eventName = key.slice(3).toLowerCase()
-        if elt._eventNameAliases? and eventName of elt._eventNameAliases
-          eventName = elt._eventNameAliases[eventName]
-        if eventName then elt.on eventName, value
+      do (key) ->
+        if key.startsWith 'on:'
+          eventName = key.slice(3).toLowerCase()
+          if elt._eventNameAliases? and eventName of elt._eventNameAliases
+            eventName = elt._eventNameAliases[eventName]
+          if eventName then elt.on eventName, value
 
     return elt
   else if typeof element == "function"

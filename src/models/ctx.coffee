@@ -7,6 +7,7 @@ export class UiContext
     @config = appOptions config
     @GLib = gi.require 'GLib', config.glib
     @Gtk = gi.require 'Gtk', config.gtk
+    @Gdk = gi.require 'Gdk', config.gdk
     if @config.gio
       @Gio = gi.require 'Gio', if config.gio isnt true then config.gio
     gi.startLoop()
