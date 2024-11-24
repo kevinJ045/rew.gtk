@@ -13,3 +13,12 @@ export excludeStuff = (options, exclude) ->
   for i in excludes
     delete o[i]
   o
+
+export createGObjectForJObject = (GObject, jsObject) ->
+  class CustomGObject extends GObject.Object
+    constructor: (properties) ->
+      super()
+      for key of properties
+        @[key] = properties[key]
+      @
+  return CustomGObject

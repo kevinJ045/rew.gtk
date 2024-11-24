@@ -5,7 +5,10 @@ export getControlWidgets = (createClass, widgets, Gtk) ->
   utils = getUtils Gtk
 
   widgets.button = createClass Gtk.Button,
-    options: (options) -> { label: options.text || 'Button' }
+    options: (options) ->
+      o = { label: options.text }
+      unless o.label then delete o.label
+      o
     name: 'button'
     take: (W) ->
       W::_eventNameAliases = click: 'clicked'
@@ -139,6 +142,7 @@ export getControlWidgets = (createClass, widgets, Gtk) ->
 
   widgets.entry = createClass Gtk.Entry,
     bindOptions: ['bind']
+    exclude: ['placeholder']
     onInit: utils.initFn_FromOption 'bind'
     name: 'input'
     take: (W) ->

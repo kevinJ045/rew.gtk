@@ -5,3 +5,4 @@ export appOptions = struct
   gtk: '4.0'
   glib: '2.0'
   gio: false
+  gobject: false

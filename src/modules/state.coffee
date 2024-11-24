@@ -73,7 +73,7 @@ export class ArrayState extends WidgetState
   remove: (value) ->
     if this.indexOf(value) > -1 then this.remove this.indexOf(value) else false
   removeAt: (index) ->
-    this.value = [...array.slice(0, index), ...array.slice(index + 1)]
+    this.value = [...this.value.slice(0, index), ...this.value.slice(index + 1)]
     this._reset()
   clear: () ->
     this.value = []

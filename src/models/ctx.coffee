@@ -9,7 +9,9 @@ export class UiContext
     @Gtk = gi.require 'Gtk', config.gtk
     @Gdk = gi.require 'Gdk', config.gdk
     if @config.gio
-      @Gio = gi.require 'Gio', if config.gio isnt true then config.gio
+      @Gio = gi.require 'Gio', if config.gio isnt true then config.gio else '2.0'
+    if @config.gobject
+      @GObject = gi.require 'GObject', if config.gio isnt true then config.gio else '2.0'
     gi.startLoop()
 
     @Gtk.init()

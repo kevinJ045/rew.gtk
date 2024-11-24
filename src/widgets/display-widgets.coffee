@@ -83,5 +83,12 @@ getDisplayWidgets = (createClass, widgets, Gtk) ->
   widgets.toolPalette = createClass Gtk.ToolPalette,
     name: 'toolPalette'
 
+  widgets.fixed = createClass Gtk.Fixed,
+    name: 'fixed'
+    take: (W) ->
+      W::_add = (child) ->
+        options = child.options or child.wrappedByClass?.options
+        @widget.put child, options?['fixed:x'] || 0, options?['fixed:y'] || 0
+
 
 exports { getDisplayWidgets }

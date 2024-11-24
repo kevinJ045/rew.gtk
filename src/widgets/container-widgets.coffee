@@ -8,7 +8,8 @@ export getContainerWidgets = (createClass, widgets, Gtk) ->
     options: utils.switchOrientation
     name: 'box'
     take: (W) ->
-      W::_add = (child) -> if Gtk.selected == '4.0' then @widget.append child else @widget.add child
+      W::_add = (child) ->
+        if Gtk.selected == '4.0' then @widget.append child else @widget.add child
 
   widgets.grid = createClass Gtk.Grid,
     name: 'grid'
@@ -18,13 +19,15 @@ export getContainerWidgets = (createClass, widgets, Gtk) ->
       @currentRow = 1
     take: (W) ->
       W::attach = (child, left, top, width, height) ->
+        print left, top, width, height
         @widget.attach(child, left, top, width, height)
       W::_add = (child) ->
         @maxCols = if @options?.maxCols? then @options.maxCols else 3
         if @currentCol >= @maxCols
           @currentCol = 0
           @currentRow += 1
-        @attach(child, @currentCol, @currentRow, 1, 1)
+        col = if child.wrappedByClass?.options?.halign is Gtk.Align.END then @maxCols else @currentCol
+        @attach(child, col, @currentRow, 1, 1)
         @currentCol += 1
 
   widgets.stack = createClass Gtk.Stack,
@@ -113,6 +116,7 @@ export getContainerWidgets = (createClass, widgets, Gtk) ->
       @children = 0
     take: (W) ->
       W::_add = (child) ->
+        print child
         if @children == 0
           if Gtk.selected is '4.0'
             @widget.setStartChild child

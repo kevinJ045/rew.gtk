@@ -1,3 +1,5 @@
+import { getUtils } from "./utils.coffee"
+import { WidgetState } from "../modules/state.coffee"
 import { getRegistry } from "../modules/registry.coffee"
 import { getWClass } from "../modules/widget.coffee"
 import { excludeStuff } from "../modules/utils.coffee"
@@ -36,6 +38,8 @@ export createWidgetClass = (ctx) ->
         if typeof originalOnInit == 'function'
           originalOnInit.call @, args...
 
+    utils = getUtils ctx.Gtk
+
     propSet = []
     onProp = (prop, cb) ->
       propSet.push name: prop, cb: cb
@@ -47,6 +51,11 @@ export createWidgetClass = (ctx) ->
       setProp: (prop, value) ->
         if prop is 'class' or prop is 'className'
           @widget.setCssClasses [...@_style.classes, ...value.split(' ')]
+        if prop == 'visible'
+          if createClass.isState value
+            value.target.on 'set', (value) ->
+              @widget.setVisible(value)
+          @widget.setVisible(if createClass.isState(value) then value.get() else value)
         if prop == 'style'
           @_style.current = value
           @_updateStyles()
@@ -65,6 +74,10 @@ export createWidgetClass = (ctx) ->
         if @options.style
           @_style.current = @options.style;
           delete @options.style;
+        if @options.halign
+          @options.halign = utils.alignments[@options.halign] or @options.halign
+        if @options.valign
+          @options.valign = utils.alignments[@options.valign] or @options.valign
         @widget = new GtkClass options(excludeStuff(@options, exclude), @options)
         @widget.wrappedByClass = @;
         @_initStyles();
@@ -72,8 +85,12 @@ export createWidgetClass = (ctx) ->
         @_style.classes = @widget.getCssClasses();
         if @options.class or @options.className
           @setProp 'class', @options.class or @options.className
+        if @options.visible
+          @setProp 'visible', @options.visible
         initResult
 
+    createClass.isState = (item) -> item instanceof WidgetState
+    createClass.isWidget = (item) -> item instanceof Widget or item instanceof WidgetClass or item?.widget
 
     WidgetClass::name = name if name isnt null
     WidgetClass::_optionsCreate = options
@@ -126,7 +143,7 @@ export createWidgetClass = (ctx) ->
   getDisplayWidgets createClass, elements, ctx.Gtk
   getSelectionWidgets createClass, elements, ctx.Gtk
   getSpecialWidgets createClass, elements, ctx.Gtk
-  getLayoutWidgets createClass, elements, ctx.Gtk
+  getLayoutWidgets createClass, elements, ctx.Gtk, ctx.Gio, ctx.GObject
   getMiscellaneousWidgets createClass, elements, ctx.Gtk
   getGestureWidgets createClass, elements, ctx.Gtk
 
