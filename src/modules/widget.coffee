@@ -14,7 +14,8 @@ export getWClass = (ctx, elements) -> Widget = class
       _id: genID(),
       css: "",
       provider: null,
-      current: {}
+      current: {},
+      classes: []
     };
     _initStyles: ->
       try
@@ -58,6 +59,9 @@ export getWClass = (ctx, elements) -> Widget = class
 
     setProp: (prop, value) ->
       @widget.setProperty prop, value
+
+    getName: () ->
+      @widget.getName()
     
 
     widget_children: []

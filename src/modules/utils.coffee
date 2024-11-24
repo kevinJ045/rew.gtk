@@ -1,5 +1,6 @@
 defaultExcludes = [
-  'name'
+  'class'
+  'className'
   'useBy'
   'useRef'
   'bind'

@@ -2,8 +2,6 @@ using namespace imp('./main',
   gtk: '4.0',
   package: packageName
 ).setup ->
-  print(Object.keys currentNamespace)
-  process.exit()
   using JSX as Widget::create
   using refine(Window) ->
     using refine(
@@ -42,9 +40,9 @@ using namespace imp('./main',
             <button>sss</button>
           </grid>
           <stack active={@store.active}>
-            <button on:click={() -> active.set 'Second'} name="First">Switch Two</button>
-            <button on:click={() -> active.set 'Third'} name="Second">Switch Three</button>
-            <button on:click={() -> active.set 'First'} name="Third">Switch One</button>
+            <button on:click={() => @store.active.set 'Second'} name="First">Switch Two</button>
+            <button on:click={() => @store.active.set 'Third'} name="Second">Switch Three</button>
+            <button on:click={() => @store.active.set 'First'} name="Third">Switch One</button>
           </stack>
           <overlay>
             <text>Hello</text>

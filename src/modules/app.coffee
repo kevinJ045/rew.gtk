@@ -1,3 +1,4 @@
+import { initStyle } from "./style.coffee"
 import { createWidgetClass } from "../widgets/widgets.coffee"
 import { UiContext } from "../models/ctx.coffee"
 import { createWindow, fixateWindow } from "../models/winctx.coffee"
@@ -23,6 +24,8 @@ export createUiApp = (options) ->
     windowContext
   ctx.Window.prototype = {}
   ctx.Window::create = (options) -> createWindow ctx, options
+
+  ctx.Style = initStyle ctx, options
   
   ctx.setup = (cb) ->
     return namespace.group [

@@ -45,6 +45,8 @@ export createWidgetClass = (ctx) ->
         super options, WidgetClass::name
 
       setProp: (prop, value) ->
+        if prop is 'class' or prop is 'className'
+          @widget.setCssClasses [...@_style.classes, ...value.split(' ')]
         if prop == 'style'
           @_style.current = value
           @_updateStyles()
@@ -66,7 +68,12 @@ export createWidgetClass = (ctx) ->
         @widget = new GtkClass options(excludeStuff(@options, exclude), @options)
         @widget.wrappedByClass = @;
         @_initStyles();
-        onInit.call(@, @widget, @options) if typeof onInit is "function"
+        initResult = onInit.call(@, @widget, @options) if typeof onInit is "function"
+        @_style.classes = @widget.getCssClasses();
+        if @options.class or @options.className
+          @setProp 'class', @options.class or @options.className
+        initResult
+
 
     WidgetClass::name = name if name isnt null
     WidgetClass::_optionsCreate = options
